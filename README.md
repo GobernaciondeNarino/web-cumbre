@@ -29,17 +29,23 @@ directo produce los 404 de `main.tsx`. Lo que se publica es la carpeta **`dist/`
 está compilada y versionada en este repositorio con rutas relativas (funciona en
 `httpdocs` o en cualquier subcarpeta).
 
-Opción A — Git de Plesk (recomendada):
+Opción A — Desplegar el repo completo (la más simple):
 
-1. En el dominio: **Git → Add repository**, apunta a este repo y a la rama que uses.
-2. Deja que despliegue a `httpdocs` (o a una carpeta como `httpdocs/landing`).
-3. En **Hosting Settings → Document root**, apunta a la carpeta `dist` del despliegue
-   (p. ej. `httpdocs/dist`). Listo: no se necesita Node.js en el servidor.
+1. Despliega el repositorio entero (Git de Plesk, FTP o File Manager) a `httpdocs`
+   **o a cualquier subcarpeta** (p. ej. `httpdocs/cumbre`).
+2. Nada más: el `.htaccess` de la raíz reescribe todas las peticiones hacia `dist/`,
+   así que `https://tudominio/` o `https://tudominio/cumbre/` sirven el build
+   directamente. No se necesita Node.js en el servidor ni cambiar el document root.
 
-Opción B — Subida manual:
+Opción B — Document root a `dist`:
+
+1. Despliega el repo y en **Hosting Settings → Document root** apunta a la carpeta
+   `dist` del despliegue (p. ej. `httpdocs/dist`).
+
+Opción C — Subida manual solo del build:
 
 1. En tu máquina: `npm install && npm run build`.
-2. Sube **el contenido de `dist/`** (no la carpeta raíz del repo) a `httpdocs` con el
+2. Sube **el contenido de `dist/`** a `httpdocs` (o a la subcarpeta que quieras) con el
    File Manager o FTP.
 
 Notas:
