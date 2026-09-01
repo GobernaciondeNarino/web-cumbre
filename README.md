@@ -21,6 +21,36 @@ npm run build     # typecheck + build de producción
 npm run preview   # sirve dist/
 ```
 
+## Despliegue en Plesk
+
+Este es un proyecto Vite: **nunca sirvas la raíz del repositorio**. El `index.html` de la
+raíz referencia `/src/main.tsx`, que solo existe en el servidor de desarrollo — servirlo
+directo produce los 404 de `main.tsx`. Lo que se publica es la carpeta **`dist/`**, que
+está compilada y versionada en este repositorio con rutas relativas (funciona en
+`httpdocs` o en cualquier subcarpeta).
+
+Opción A — Git de Plesk (recomendada):
+
+1. En el dominio: **Git → Add repository**, apunta a este repo y a la rama que uses.
+2. Deja que despliegue a `httpdocs` (o a una carpeta como `httpdocs/landing`).
+3. En **Hosting Settings → Document root**, apunta a la carpeta `dist` del despliegue
+   (p. ej. `httpdocs/dist`). Listo: no se necesita Node.js en el servidor.
+
+Opción B — Subida manual:
+
+1. En tu máquina: `npm install && npm run build`.
+2. Sube **el contenido de `dist/`** (no la carpeta raíz del repo) a `httpdocs` con el
+   File Manager o FTP.
+
+Notas:
+
+- No hay rutas de SPA: es una sola página, no se necesitan reglas de rewrite en
+  `.htaccess` ni en nginx.
+- Los MP4 ya llevan `faststart`; Apache/nginx de Plesk sirven `Range` por defecto,
+  que es lo único que el scrub de vídeo necesita.
+- Si cambias código, vuelve a ejecutar `npm run build` y confirma el nuevo `dist/`
+  antes de desplegar.
+
 ## Dónde cambiar los assets
 
 Todo vive en `src/config/assets.ts`:
