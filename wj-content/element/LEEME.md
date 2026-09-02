@@ -13,6 +13,7 @@ página de WordPress, en el orden que quieras y sin afectarse entre sí.
 | `contenido.html`        | Motor del recorrido: vídeo fijo a pantalla completa que se scrubbea con el scroll mientras el visitante pasa por tus secciones de capítulos. |
 | `cumbre-banner.json`    | Plantilla importable de Elementor: banner completo (vídeo + títulos + párrafo) ya armado con widgets nativos. |
 | `cumbre-contenido.json` | Plantilla importable de Elementor: motor + 5 capítulos con los textos de la Cumbre en widgets `heading`/`text-editor`. |
+| `cumbre-inscripcion.json` | Plantilla importable de Elementor: sección "Inscripciones abiertas / Sé parte de la Cumbre" completa (etiqueta con punto pulsante, título, párrafo, fila de datos, botón píldora y nota), con ID de anclaje `inscripcion`. |
 
 ## Opción rápida — importar los JSON
 
@@ -45,6 +46,18 @@ página de WordPress, en el orden que quieras y sin afectarse entre sí.
    desaparece solo.
 4. Si no agregas ningún capítulo, el widget genera un recorrido de
    demostración de `data-secciones` × 100vh.
+
+### Inscripción (`cumbre-inscripcion.json`)
+
+1. Importa la plantilla e insértala donde quieras (normalmente al final).
+2. El contenedor ya trae el ID CSS `inscripcion`, así que el botón "Quiero
+   inscribirme" de los capítulos (enlace `#inscripcion`) salta hasta aquí.
+3. **Pega la URL real de tu formulario** en el enlace del botón "Ir al
+   formulario de inscripción" (por defecto apunta a `#`).
+4. El punto pulsante de la etiqueta y el botón píldora vienen de las clases
+   CSS `cumbre-etiqueta-viva` y `cumbre-boton` que define el pequeño widget
+   HTML de decoración incluido en la plantilla (rejilla + glow naranja);
+   puedes reutilizarlas en otros widgets de la misma página.
 
 ## Cambiar el vídeo
 

@@ -1,0 +1,232 @@
+{
+ "content": [
+  {
+   "id": "37d48c9b",
+   "elType": "container",
+   "isInner": false,
+   "settings": {
+    "content_width": "full",
+    "flex_direction": "column",
+    "flex_justify_content": "center",
+    "flex_align_items": "center",
+    "min_height": {
+     "unit": "vh",
+     "size": 100,
+     "sizes": []
+    },
+    "background_background": "classic",
+    "background_color": "#00133D",
+    "border_border": "solid",
+    "border_width": {
+     "unit": "px",
+     "top": "1",
+     "right": "0",
+     "bottom": "0",
+     "left": "0",
+     "isLinked": false
+    },
+    "border_color": "rgba(255,255,255,0.1)",
+    "padding": {
+     "unit": "px",
+     "top": "96",
+     "right": "24",
+     "bottom": "96",
+     "left": "24",
+     "isLinked": false
+    },
+    "_element_id": "inscripcion"
+   },
+   "elements": [
+    {
+     "id": "313ca599",
+     "elType": "widget",
+     "isInner": false,
+     "settings": {
+      "html": "<!-- Decoración de la sección de inscripción: rejilla, glow naranja y\npunto pulsante para la etiqueta. Pega este widget dentro del contenedor de la\nsección; el resto son widgets normales de Elementor. -->\n<div class=\"cumbre-inscripcion-decor\" aria-hidden=\"true\"></div>\n<style>\n  .cumbre-inscripcion-marco{position:relative!important;overflow:hidden;}\n  .cumbre-inscripcion-marco .elementor-widget:not(.cumbre-inscripcion-anfitrion){position:relative;z-index:2;}\n  .cumbre-inscripcion-decor{position:absolute;inset:0;pointer-events:none;z-index:0;}\n  .cumbre-inscripcion-decor::before{content:\"\";position:absolute;inset:0;opacity:.4;\n    background-size:50px 50px;\n    background-image:linear-gradient(to right,rgba(255,255,255,.04) 1px,transparent 1px),\n      linear-gradient(to bottom,rgba(255,255,255,.04) 1px,transparent 1px);}\n  .cumbre-inscripcion-decor::after{content:\"\";position:absolute;left:50%;top:50%;\n    width:480px;height:480px;transform:translate(-50%,-50%);border-radius:50%;\n    background:#FF6300;filter:blur(120px);opacity:.3;}\n  /* Punto pulsante delante de la etiqueta: asigna la clase CSS\n     \"cumbre-etiqueta-viva\" al widget de título de la etiqueta. */\n  .cumbre-etiqueta-viva .elementor-heading-title{display:inline-flex;align-items:center;gap:8px;}\n  .cumbre-etiqueta-viva .elementor-heading-title::before{content:\"\";width:6px;height:6px;\n    border-radius:50%;background:#FF6300;animation:cumbre-pulso 2s cubic-bezier(.4,0,.6,1) infinite;}\n  @keyframes cumbre-pulso{0%,100%{opacity:1}50%{opacity:.4}}\n  /* Botón píldora naranja reutilizable: clase \"cumbre-boton\" en el widget botón. */\n  .cumbre-boton .elementor-button{border-radius:999px;background:#FF6300;color:#00133D;\n    font-weight:700;transition:background .2s,color .2s;}\n  .cumbre-boton .elementor-button:hover{background:#8C0001;color:#fff;}\n</style>\n<script>\n(function(){\n  \"use strict\";\n  var d=document.querySelector(\".cumbre-inscripcion-decor:not([data-listo])\");\n  if(!d)return;\n  d.setAttribute(\"data-listo\",\"1\");\n  var w=d.closest(\".elementor-widget\");\n  if(w)w.classList.add(\"cumbre-inscripcion-anfitrion\");\n  var m=d.closest(\".e-con, .elementor-section, .elementor-column\")||d.parentElement;\n  m.classList.add(\"cumbre-inscripcion-marco\");\n})();\n</script>"
+     },
+     "elements": [],
+     "widgetType": "html"
+    },
+    {
+     "id": "51c21943",
+     "elType": "widget",
+     "isInner": false,
+     "settings": {
+      "title": "Inscripciones abiertas",
+      "header_size": "h6",
+      "title_color": "#FF6300",
+      "align": "center",
+      "typography_typography": "custom",
+      "typography_font_family": "JetBrains Mono",
+      "typography_font_weight": "500",
+      "typography_font_size": {
+       "unit": "px",
+       "size": 12,
+       "sizes": []
+      },
+      "typography_letter_spacing": {
+       "unit": "px",
+       "size": 4,
+       "sizes": []
+      },
+      "typography_text_transform": "uppercase",
+      "css_classes": "cumbre-etiqueta-viva"
+     },
+     "elements": [],
+     "widgetType": "heading"
+    },
+    {
+     "id": "b8d9a29a",
+     "elType": "widget",
+     "isInner": false,
+     "settings": {
+      "title": "Sé parte de la Cumbre",
+      "header_size": "h2",
+      "align": "center",
+      "title_color": "#FFFFFF",
+      "typography_typography": "custom",
+      "typography_font_family": "Outfit",
+      "typography_font_weight": "900",
+      "typography_font_size": {
+       "unit": "px",
+       "size": 84,
+       "sizes": []
+      },
+      "typography_font_size_mobile": {
+       "unit": "px",
+       "size": 48,
+       "sizes": []
+      },
+      "typography_line_height": {
+       "unit": "em",
+       "size": 0.9,
+       "sizes": []
+      }
+     },
+     "elements": [],
+     "widgetType": "heading"
+    },
+    {
+     "id": "389b2290",
+     "elType": "widget",
+     "isInner": false,
+     "settings": {
+      "editor": "<p style=\"text-align:center\">Dos días para entender, probar y construir con inteligencia artificial desde Nariño. La inscripción toma menos de dos minutos.</p>",
+      "text_color": "rgba(255,255,255,0.5)",
+      "align": "center",
+      "typography_typography": "custom",
+      "typography_font_family": "Inter",
+      "typography_font_size": {
+       "unit": "px",
+       "size": 17,
+       "sizes": []
+      },
+      "typography_line_height": {
+       "unit": "em",
+       "size": 1.6,
+       "sizes": []
+      },
+      "_element_width": "initial",
+      "_element_custom_width": {
+       "unit": "px",
+       "size": 620,
+       "sizes": []
+      }
+     },
+     "elements": [],
+     "widgetType": "text-editor"
+    },
+    {
+     "id": "f6d5b794",
+     "elType": "widget",
+     "isInner": false,
+     "settings": {
+      "editor": "<p style=\"text-align:center\"><span style=\"color:#FEB100\">500</span><span style=\"color:rgba(255,255,255,0.4)\"> cupos · </span><span style=\"color:#FEB100\">Presencial</span><span style=\"color:rgba(255,255,255,0.4)\"> en Pasto · </span><span style=\"color:#FEB100\">2026</span><span style=\"color:rgba(255,255,255,0.4)\"> fecha límite por anunciar</span></p>",
+      "typography_typography": "custom",
+      "typography_font_family": "JetBrains Mono",
+      "typography_font_size": {
+       "unit": "px",
+       "size": 12,
+       "sizes": []
+      }
+     },
+     "elements": [],
+     "widgetType": "text-editor"
+    },
+    {
+     "id": "dbbaefd9",
+     "elType": "widget",
+     "isInner": false,
+     "settings": {
+      "text": "Ir al formulario de inscripción",
+      "link": {
+       "url": "#",
+       "is_external": "on",
+       "nofollow": "",
+       "custom_attributes": ""
+      },
+      "align": "center",
+      "css_classes": "cumbre-boton",
+      "typography_typography": "custom",
+      "typography_font_family": "Outfit",
+      "typography_font_weight": "700",
+      "typography_font_size": {
+       "unit": "px",
+       "size": 16,
+       "sizes": []
+      },
+      "button_padding": {
+       "unit": "px",
+       "top": "16",
+       "right": "32",
+       "bottom": "16",
+       "left": "32",
+       "isLinked": false
+      },
+      "selected_icon": {
+       "value": "fas fa-arrow-up-right-from-square",
+       "library": "fa-solid"
+      },
+      "icon_align": "right"
+     },
+     "elements": [],
+     "widgetType": "button"
+    },
+    {
+     "id": "69804955",
+     "elType": "widget",
+     "isInner": false,
+     "settings": {
+      "title": "Se abrirá en una pestaña nueva",
+      "header_size": "h6",
+      "title_color": "rgba(255,255,255,0.3)",
+      "align": "center",
+      "typography_typography": "custom",
+      "typography_font_family": "JetBrains Mono",
+      "typography_font_weight": "500",
+      "typography_font_size": {
+       "unit": "px",
+       "size": 12,
+       "sizes": []
+      },
+      "typography_letter_spacing": {
+       "unit": "px",
+       "size": 0,
+       "sizes": []
+      },
+      "typography_text_transform": "none"
+     },
+     "elements": [],
+     "widgetType": "heading"
+    }
+   ]
+  }
+ ],
+ "page_settings": {
+  "background_background": "classic",
+  "background_color": "#00133D"
+ },
+ "version": "0.4",
+ "title": "Cumbre IA — Inscripción",
+ "type": "page"
+}
