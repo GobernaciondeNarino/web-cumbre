@@ -1,0 +1,317 @@
+<!doctype html><html><head><meta charset="utf-8"><title>p2</title>
+<style>body{margin:0;background:#00133d}</style></head><body>
+<div class="e-con" style="min-height:100vh"><div class="elementor-widget"><!-- ============================================================================
+  CUMBRE IA NARIÑO · BANNER — vídeo scrubbeado con el mouse, para Elementor.
+
+  CÓMO USARLO:
+  1. En Elementor crea un contenedor con Altura mínima = 100vh y fondo propio
+     (o usa la plantilla cumbre-banner.json ya lista).
+  2. Dentro del contenedor agrega un widget "HTML" y pega TODO este archivo.
+  3. En ese mismo contenedor agrega tus widgets de título y texto: el vídeo
+     queda detrás y tus widgets encima, en el orden que quieras.
+  4. Cambia la URL del vídeo en data-video (puede ser un MP4 de tu Biblioteca
+     de medios de WordPress). Debe ser un .mp4 directo H.264 sin audio.
+
+  El efecto: mover el mouse en horizontal adelanta/retrocede el vídeo con
+  suavizado; en pantallas táctiles el vídeo se scrubbea con el scroll; al
+  hacer scroll hacia abajo la escena se funde a oscuro.
+============================================================================ -->
+<div class="cumbre-banner"
+     data-video="/cumbre/videos/cumbre-principal.mp4"
+     data-duracion-reserva="4">
+  <div class="cumbre-banner__nucleo"></div>
+  <div class="cumbre-banner__rejilla"></div>
+  <video class="cumbre-banner__video" muted playsinline preload="auto" aria-hidden="true"></video>
+  <div class="cumbre-banner__vineta"></div>
+  <div class="cumbre-banner__salida"></div>
+</div>
+
+<style>
+  .cumbre-banner{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0;}
+  .cumbre-banner__nucleo{position:absolute;inset:0;
+    background:radial-gradient(ellipse at center,#000a22 0%,#00133d 65%);}
+  .cumbre-banner__rejilla{position:absolute;inset:0;opacity:.6;mix-blend-mode:overlay;
+    background-size:50px 50px;
+    background-image:linear-gradient(to right,rgba(255,255,255,.04) 1px,transparent 1px),
+      linear-gradient(to bottom,rgba(255,255,255,.04) 1px,transparent 1px);}
+  .cumbre-banner__video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+    opacity:.95;mix-blend-mode:screen;}
+  .cumbre-banner__vineta{position:absolute;inset:0;opacity:.9;
+    background:linear-gradient(to top,#00133d 0%,transparent 35%,transparent 70%,#00133d 100%);}
+  .cumbre-banner__salida{position:absolute;inset:0;background:#00133d;opacity:0;}
+  /* El contenedor de Elementor que aloja el banner se vuelve el marco del efecto
+     y sus demás widgets quedan por encima del vídeo. */
+  .cumbre-banner-marco{position:relative!important;overflow:hidden;}
+  .cumbre-banner-marco .elementor-widget:not(.cumbre-banner-anfitrion){position:relative;z-index:2;}
+  /* Degradado ámbar→naranja reutilizable para un heading de Elementor:
+     asigna la clase CSS "cumbre-texto-degradado" al widget de título. */
+  .cumbre-texto-degradado .elementor-heading-title{
+    background:linear-gradient(90deg,#feb100,#ff6300);
+    -webkit-background-clip:text;background-clip:text;color:transparent;}
+</style>
+
+<script>
+(function () {
+  "use strict";
+  var raiz = document.currentScript.previousElementSibling.previousElementSibling;
+  if (!raiz || !raiz.classList || !raiz.classList.contains("cumbre-banner")) {
+    raiz = document.querySelector(".cumbre-banner:not([data-listo])");
+  }
+  if (!raiz) return;
+  raiz.setAttribute("data-listo", "1");
+
+  var video = raiz.querySelector(".cumbre-banner__video");
+  var salida = raiz.querySelector(".cumbre-banner__salida");
+  var reserva = parseFloat(raiz.getAttribute("data-duracion-reserva")) || 4;
+  video.src = raiz.getAttribute("data-video");
+
+  // El widget se ancla al contenedor de Elementor que lo aloja.
+  var anfitrion = raiz.closest(".elementor-widget");
+  if (anfitrion) anfitrion.classList.add("cumbre-banner-anfitrion");
+  var marco = raiz.closest(".e-con, .elementor-section, .elementor-column") ||
+    raiz.parentElement;
+  marco.classList.add("cumbre-banner-marco");
+
+  var duracion = 0;
+  var objetivo = 0.5;
+  var actual = 0.5;
+  var seekPendiente = null;
+  var movimientoReducido = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var punteroFino = window.matchMedia("(pointer: fine)").matches;
+
+  function capturarDuracion() {
+    if (isFinite(video.duration) && video.duration > 0) duracion = video.duration;
+  }
+  video.addEventListener("loadedmetadata", function () {
+    capturarDuracion();
+    video.pause();
+    video.currentTime = movimientoReducido ? (duracion || reserva) / 2 : 0;
+  });
+  video.addEventListener("durationchange", capturarDuracion);
+  video.addEventListener("canplay", capturarDuracion);
+  // Cola de exactamente un seek pendiente: nunca más seeks de los que el
+  // decodificador puede atender.
+  video.addEventListener("seeked", function () {
+    if (seekPendiente !== null) {
+      var t = seekPendiente;
+      seekPendiente = null;
+      video.currentTime = t;
+    }
+  });
+
+  function irAProgreso(progreso) {
+    var d = duracion || video.duration;
+    if (!d || !isFinite(d)) d = reserva;
+    var limitado = Math.max(0, Math.min(1, progreso));
+    var destino = limitado * Math.max(0, d - 0.05);
+    if (video.seeking) seekPendiente = destino;
+    else video.currentTime = destino;
+  }
+
+  if (!movimientoReducido && punteroFino) {
+    // El mouse solo fija un objetivo; un bucle rAF interpola con easing
+    // exponencial hacia él para que el scrub se sienta amortiguado.
+    marco.addEventListener("mousemove", function (e) {
+      var caja = marco.getBoundingClientRect();
+      var pct = (e.clientX - caja.left) / caja.width;
+      objetivo = Math.max(0, Math.min(1, (pct - 0.1) / 0.8));
+    });
+    (function animar() {
+      var siguiente = actual + (objetivo - actual) * 0.09;
+      if (Math.abs(siguiente - actual) > 0.0004) {
+        actual = siguiente;
+        irAProgreso(siguiente);
+      }
+      requestAnimationFrame(animar);
+    })();
+  }
+
+  // Fundido de salida + scrub táctil, atados al scroll.
+  function alDesplazar() {
+    var caja = marco.getBoundingClientRect();
+    var progresoSalida = Math.max(0, Math.min(1, -caja.top / Math.max(1, caja.height)));
+    salida.style.opacity = String(
+      Math.max(0, Math.min(1, (progresoSalida - 0.2) / 0.7)),
+    );
+    if (!punteroFino && !movimientoReducido) irAProgreso(progresoSalida);
+  }
+  window.addEventListener("scroll", alDesplazar, { passive: true });
+  alDesplazar();
+})();
+</script>
+</div></div>
+<div class="e-con"><div class="elementor-widget"><!-- ============================================================================
+  CUMBRE IA NARIÑO · CONTENIDO — vídeo scrubbeado con el scroll, para Elementor.
+
+  CÓMO USARLO:
+  1. En Elementor agrega un widget "HTML" y pega TODO este archivo. Colócalo
+     JUSTO ANTES de tus secciones de capítulos.
+  2. Crea tus capítulos como contenedores normales de Elementor (título,
+     texto, botones… lo que quieras) y a CADA UNO asígnale la clase CSS
+     "cumbre-capitulo" (Avanzado → Clases CSS). Puedes crear los que quieras,
+     en el orden que quieras: el vídeo se reparte en partes iguales entre ellos.
+  3. Deja los capítulos con fondo transparente para que el vídeo se vea detrás.
+  4. Cambia la URL del vídeo en data-video (MP4 directo H.264 sin audio; puede
+     venir de tu Biblioteca de medios).
+
+  El efecto: mientras el visitante recorre los capítulos, el vídeo queda fijo
+  a pantalla completa detrás del contenido y avanza/retrocede al ritmo del
+  scroll, con suavizado. Antes del primer capítulo y después del último, el
+  vídeo desaparece en fundido y no interfiere con el resto de la página.
+
+  Si NO agregas ninguna sección con clase "cumbre-capitulo", el widget crea
+  su propio recorrido de data-secciones × 100vh como demostración.
+============================================================================ -->
+<div class="cumbre-secuencia"
+     data-video="/cumbre/videos/cumbre-secuencia.mp4"
+     data-duracion-reserva="20"
+     data-secciones="5">
+  <div class="cumbre-secuencia__nucleo"></div>
+  <video class="cumbre-secuencia__video" muted playsinline preload="auto" aria-hidden="true"></video>
+  <div class="cumbre-secuencia__vineta"></div>
+</div>
+
+<style>
+  .cumbre-secuencia{position:fixed;inset:0;z-index:1;opacity:0;pointer-events:none;
+    visibility:hidden;transition:visibility 0s linear .2s;}
+  .cumbre-secuencia.cumbre-secuencia--activa{visibility:visible;transition:none;}
+  .cumbre-secuencia__nucleo{position:absolute;inset:0;
+    background:radial-gradient(ellipse at center,#000a22 0%,#00133d 65%);}
+  .cumbre-secuencia__video{position:absolute;inset:0;width:100%;height:100%;
+    object-fit:cover;opacity:.95;mix-blend-mode:screen;}
+  .cumbre-secuencia__vineta{position:absolute;inset:0;
+    background:linear-gradient(to right,rgba(0,19,61,.85) 0%,transparent 35%,transparent 65%,rgba(0,19,61,.85) 100%);}
+  /* Los capítulos del usuario quedan por encima del vídeo fijo. */
+  .cumbre-capitulo{position:relative;z-index:2;min-height:100vh;}
+  .cumbre-secuencia__espaciador{height:0;}
+</style>
+
+<script>
+(function () {
+  "use strict";
+  var raiz = document.querySelector(".cumbre-secuencia:not([data-listo])");
+  if (!raiz) return;
+  raiz.setAttribute("data-listo", "1");
+
+  var video = raiz.querySelector(".cumbre-secuencia__video");
+  var reserva = parseFloat(raiz.getAttribute("data-duracion-reserva")) || 20;
+  var seccionesDemo = parseInt(raiz.getAttribute("data-secciones"), 10) || 5;
+  video.src = raiz.getAttribute("data-video");
+
+  var anfitrion = raiz.closest(".elementor-widget") || raiz;
+  var duracion = 0;
+  var objetivo = 0;
+  var actual = 0;
+  var seekPendiente = null;
+  var espaciador = null;
+  var movimientoReducido = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function capturarDuracion() {
+    if (isFinite(video.duration) && video.duration > 0) duracion = video.duration;
+  }
+  video.addEventListener("loadedmetadata", function () {
+    capturarDuracion();
+    video.pause();
+    video.currentTime = 0;
+  });
+  video.addEventListener("durationchange", capturarDuracion);
+  video.addEventListener("canplay", capturarDuracion);
+  video.addEventListener("seeked", function () {
+    if (seekPendiente !== null) {
+      var t = seekPendiente;
+      seekPendiente = null;
+      video.currentTime = t;
+    }
+  });
+
+  function irAProgreso(progreso) {
+    var d = duracion || video.duration;
+    if (!d || !isFinite(d)) d = reserva;
+    var limitado = Math.max(0, Math.min(1, progreso));
+    var destino = limitado * Math.max(0, d - 0.05);
+    if (video.seeking) seekPendiente = destino;
+    else video.currentTime = destino;
+  }
+
+  function capitulos() {
+    return Array.prototype.slice.call(document.querySelectorAll(".cumbre-capitulo"));
+  }
+
+  // Sin capítulos del usuario, se crea un recorrido de demostración.
+  function asegurarRecorrido() {
+    if (capitulos().length > 0) {
+      if (espaciador) { espaciador.remove(); espaciador = null; }
+      return;
+    }
+    if (!espaciador) {
+      espaciador = document.createElement("div");
+      espaciador.className = "cumbre-secuencia__espaciador";
+      anfitrion.parentNode.insertBefore(espaciador, anfitrion.nextSibling);
+    }
+    espaciador.style.height = seccionesDemo * 100 + "vh";
+  }
+
+  function rango() {
+    var caps = capitulos();
+    if (caps.length > 0) {
+      var inicio = Infinity;
+      var fin = -Infinity;
+      caps.forEach(function (c) {
+        var caja = c.getBoundingClientRect();
+        inicio = Math.min(inicio, caja.top + window.scrollY);
+        fin = Math.max(fin, caja.bottom + window.scrollY);
+      });
+      return { inicio: inicio, fin: fin };
+    }
+    var base = anfitrion.getBoundingClientRect().top + window.scrollY;
+    return { inicio: base, fin: base + seccionesDemo * window.innerHeight };
+  }
+
+  function alDesplazar() {
+    asegurarRecorrido();
+    var r = rango();
+    var alto = window.innerHeight;
+    var recorrido = Math.max(1, r.fin - r.inicio - alto);
+    var progreso = (window.scrollY - r.inicio) / recorrido;
+    objetivo = progreso;
+
+    // El vídeo solo es visible dentro del recorrido, con fundido en los bordes.
+    var dentro = progreso > -0.15 && progreso < 1.15;
+    raiz.classList.toggle("cumbre-secuencia--activa", dentro);
+    var entrada = Math.max(0, Math.min(1, (progreso + 0.1) / 0.15));
+    var salida = Math.max(0, Math.min(1, (1.1 - progreso) / 0.15));
+    raiz.style.opacity = String(Math.min(entrada, salida));
+  }
+  window.addEventListener("scroll", alDesplazar, { passive: true });
+  window.addEventListener("resize", alDesplazar);
+
+  if (movimientoReducido) {
+    // Sin animación: un frame representativo según el capítulo visible.
+    window.addEventListener("scroll", function () {
+      var n = capitulos().length || seccionesDemo;
+      var i = Math.max(0, Math.min(n - 1, Math.floor(objetivo * n)));
+      irAProgreso((i + 0.5) / n);
+    }, { passive: true });
+  } else {
+    // Suavizado tipo muelle: el scroll fija el objetivo y el bucle rAF
+    // interpola hacia él, drenando como mucho un seek por frame.
+    (function animar() {
+      var siguiente = actual + (objetivo - actual) * 0.11;
+      if (Math.abs(siguiente - actual) > 0.0004) {
+        actual = siguiente;
+        irAProgreso(siguiente);
+      }
+      requestAnimationFrame(animar);
+    })();
+  }
+  alDesplazar();
+})();
+</script>
+</div></div>
+<div class="cumbre-capitulo"><div style="color:#fff"><h2>Capítulo 1</h2></div></div>
+<div class="cumbre-capitulo"><div style="color:#fff"><h2>Capítulo 2</h2></div></div>
+<div class="cumbre-capitulo"><div style="color:#fff"><h2>Capítulo 3</h2></div></div>
+<div class="cumbre-capitulo"><div style="color:#fff"><h2>Capítulo 4</h2></div></div>
+<div class="cumbre-capitulo"><div style="color:#fff"><h2>Capítulo 5</h2></div></div>
+<div style="min-height:100vh"></div>
+</body></html>

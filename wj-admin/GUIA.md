@@ -65,6 +65,13 @@ compila; el sitio ya está configurado para mantener ambos en sincronía.
 > vídeo directamente en `dist/videos/` — pero replica el cambio en
 > `wj-content/uploads/videos/` cuanto antes para que no se pierda en el próximo build.
 
+## Versiones para Elementor (WordPress)
+
+En `wj-content/element/` hay versiones autónomas de los dos efectos (vídeo con
+mouse y recorrido con scroll) para pegar en widgets HTML de Elementor, más dos
+plantillas `.json` importables con los textos ya armados. Instrucciones completas
+en `wj-content/element/LEEME.md`.
+
 ## Requisitos del vídeo de secuencia
 
 - MP4 H.264, sin audio, con `faststart` (el átomo `moov` al inicio).
