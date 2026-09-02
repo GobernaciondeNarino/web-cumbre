@@ -136,14 +136,14 @@ export default function HeroStage({
         <HeroTitle />
       </div>
 
-      {/* z-10 · vídeo scrubbeado por ratón, figura desplazada a la derecha */}
+      {/* z-10 · vídeo scrubbeado por ratón, centrado a ancho completo */}
       <video
         ref={videoRef}
         muted
         playsInline
         preload="auto"
         aria-hidden="true"
-        className="absolute inset-0 w-full h-full object-cover opacity-95 mix-blend-screen pointer-events-none z-10 lg:translate-x-[14%] lg:scale-110"
+        className="absolute inset-0 w-full h-full object-cover opacity-95 mix-blend-screen pointer-events-none z-10"
         {...videoHandlers}
       >
         <source src={VIDEO_PRINCIPAL_URL} type="video/mp4" />
