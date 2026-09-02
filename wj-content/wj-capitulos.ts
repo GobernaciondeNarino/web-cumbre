@@ -1,3 +1,9 @@
+// ============================================================================
+// CAPÍTULOS DEL RECORRIDO — cada objeto es una "pantalla" del scroll con vídeo.
+// El orden de la lista es el orden del recorrido; el vídeo de secuencia se
+// reparte en partes iguales entre los capítulos (5 capítulos = 5 tramos).
+// ============================================================================
+
 export const CHAPTERS = [
   {
     id: "manifiesto",
@@ -32,6 +38,8 @@ export const CHAPTERS = [
     kicker: "Quiénes estaremos",
     body: "Estudiantes, servidores públicos, emprendedores y curiosos de toda la región. La Cumbre es el punto de encuentro del ecosistema de innovación de Nariño.",
     showAvatars: true,
+    avataresNota: "asistentes esperados",
+    avataresCifra: "500+",
   },
   {
     id: "programa",
@@ -40,11 +48,13 @@ export const CHAPTERS = [
     kicker: "Por qué inscribirte",
     body: "La entrada es libre con inscripción previa y los cupos son limitados. Asegura tu lugar y sé parte de la primera gran cita de la inteligencia artificial en Nariño.",
     showCta: true,
+    ctaTexto: "Quiero inscribirme",
   },
 ] as const;
 
 export type Chapter = (typeof CHAPTERS)[number];
 
+/** Retratos de la fila de avatares del capítulo Comunidad. */
 export const AVATARS = [
   "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&q=80",
   "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=80&q=80",

@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "motion/react";
 import { Menu, MessageCircle, Sparkles, X } from "lucide-react";
-import { CHAPTERS } from "../config/chapters";
+import { CHAPTERS } from "../../wj-content/wj-capitulos";
+import { CABECERA } from "../../wj-content/wj-textos";
 
 interface HeaderProps {
   activeSection: number;
@@ -45,9 +46,11 @@ export default function Header({
             }}
             className="font-display font-black tracking-tighter text-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sky"
           >
-            CUMBRE<span className="text-ember">·</span>IA
+            {CABECERA.marca}
+            <span className="text-ember">·</span>
+            {CABECERA.marcaSufijo}
             <span className="ml-2 font-mono text-[10px] font-normal tracking-[0.25em] text-white/40 uppercase">
-              Nariño
+              {CABECERA.marcaNota}
             </span>
           </a>
 
@@ -133,7 +136,7 @@ export default function Header({
                   >
                     <span className="font-mono text-xs text-ember">06</span>
                     <span className="font-display text-4xl md:text-6xl font-black tracking-tighter text-ember group-hover:text-sky transition-colors">
-                      Inscripción
+                      {CABECERA.menuInscripcion}
                     </span>
                   </a>
                 </li>

@@ -6,7 +6,7 @@
   # Lo que ya apunta dentro de dist/ se sirve tal cual (evita bucles).
   RewriteRule ^dist/ - [L]
   # Nunca exponer el código fuente ni la configuración.
-  RewriteRule ^(src|node_modules|\.claude|\.github|\.git)(/|$) dist/index.html [L]
+  RewriteRule ^(wj-includes|wj-content|wj-admin|node_modules|\.claude|\.github|\.git)(/|$) dist/index.html [L]
   # Todo lo demás (/, /favicon.svg, /assets/*, /videos/*) se reescribe hacia dist/.
   RewriteRule ^(.*)$ dist/$1 [L]
 </IfModule>

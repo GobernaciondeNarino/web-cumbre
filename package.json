@@ -4,9 +4,9 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc --noEmit && vite build",
-    "preview": "vite preview"
+    "dev": "vite --config wj-vite.config.ts",
+    "build": "tsc --noEmit && vite build --config wj-vite.config.ts",
+    "preview": "vite preview --config wj-vite.config.ts"
   },
   "dependencies": {
     "lucide-react": "^0.546.0",

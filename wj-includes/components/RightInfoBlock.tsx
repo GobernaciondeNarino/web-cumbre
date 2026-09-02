@@ -1,5 +1,6 @@
 import { motion } from "motion/react";
 import { ChevronDown } from "lucide-react";
+import { HERO } from "../../wj-content/wj-textos";
 
 export default function RightInfoBlock() {
   return (
@@ -11,10 +12,12 @@ export default function RightInfoBlock() {
     >
       <div className="text-right">
         <p className="font-mono text-xs text-white/40 uppercase tracking-[0.25em] mb-2">
-          Entrada libre · <span className="text-amber">Cupos limitados</span>
+          {HERO.notaDerecha} · <span className="text-amber">{HERO.notaDerechaDestacada}</span>
         </p>
         <div className="flex items-center justify-end gap-2 text-white/60">
-          <span className="font-mono text-xs uppercase tracking-[0.25em]">Desplázate</span>
+          <span className="font-mono text-xs uppercase tracking-[0.25em]">
+            {HERO.indicadorScroll}
+          </span>
           <motion.span
             animate={{ y: [0, 6, 0] }}
             transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}

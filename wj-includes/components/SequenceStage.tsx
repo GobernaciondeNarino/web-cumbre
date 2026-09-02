@@ -9,8 +9,8 @@ import {
 } from "motion/react";
 import ChapterOverlay from "./ChapterOverlay";
 import { useVideoScrub } from "../hooks/useVideoScrub";
-import { VIDEO_SECUENCIA_URL } from "../config/assets";
-import { CHAPTERS } from "../config/chapters";
+import { VIDEO_SECUENCIA_URL } from "../../wj-content/wj-enlaces";
+import { CHAPTERS } from "../../wj-content/wj-capitulos";
 
 interface SequenceStageProps {
   ref?: Ref<HTMLElement>;
@@ -56,6 +56,10 @@ export default function SequenceStage({
     if (!prefersReducedMotion) seekToProgress(p);
   });
 
+  // Contraparte del fundido de salida del banner: el vídeo de secuencia
+  // aparece gradualmente durante el arranque del primer capítulo.
+  const videoOpacity = useTransform(smoothProgress, [0, 0.05], [0, 0.95]);
+
   const chapterIndex = useTransform(smoothProgress, (p) =>
     Math.min(CHAPTERS.length - 1, Math.max(0, Math.floor(p * CHAPTERS.length))),
   );
@@ -99,17 +103,18 @@ export default function SequenceStage({
           )}
         </div>
 
-        <video
+        <motion.video
           ref={videoRef}
           muted
           playsInline
           preload="auto"
           aria-hidden="true"
-          className="absolute inset-0 w-full h-full object-cover opacity-95 mix-blend-screen z-10"
+          style={{ opacity: prefersReducedMotion ? 0.95 : videoOpacity }}
+          className="absolute inset-0 w-full h-full object-cover mix-blend-screen z-10"
           {...videoHandlers}
         >
           <source src={VIDEO_SECUENCIA_URL} type="video/mp4" />
-        </video>
+        </motion.video>
 
         {/* Viñeta lateral para contraste de lectura */}
         <div className="absolute inset-0 z-[15] pointer-events-none bg-gradient-to-r from-abyss/85 via-transparent to-abyss/85" />

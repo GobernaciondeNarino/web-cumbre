@@ -4,12 +4,13 @@ import {
   useMotionValueEvent,
   useReducedMotion,
   useScroll,
+  useTransform,
 } from "motion/react";
-import CumbreTitle from "./CumbreTitle";
+import HeroTitle from "./HeroTitle";
 import LeftInfoBlock from "./LeftInfoBlock";
 import RightInfoBlock from "./RightInfoBlock";
 import { useVideoScrub } from "../hooks/useVideoScrub";
-import { VIDEO_PRINCIPAL_URL } from "../config/assets";
+import { VIDEO_PRINCIPAL_URL } from "../../wj-content/wj-enlaces";
 
 interface HeroStageProps {
   ambientGlowColor: string;
@@ -31,7 +32,32 @@ export default function HeroStage({
     [],
   );
 
-  // Fallback táctil: sin puntero fino el hero se scrubbea con su propio scroll.
+  // Scrub suavizado: el ratón solo fija un objetivo; un bucle rAF interpola
+  // hacia él con easing exponencial, igual que las webs de scrub tipo WebGL.
+  // Así el vídeo nunca recibe más seeks de los que puede decodificar y el
+  // movimiento se siente amortiguado en lugar de saltar con cada mousemove.
+  const targetProgressRef = useRef(0.5);
+  const currentProgressRef = useRef(0.5);
+
+  useEffect(() => {
+    if (!hasFinePointer || prefersReducedMotion) return;
+    let raf = 0;
+    const tick = () => {
+      const current = currentProgressRef.current;
+      const target = targetProgressRef.current;
+      const next = current + (target - current) * 0.09;
+      if (Math.abs(next - current) > 0.0004) {
+        currentProgressRef.current = next;
+        seekToProgress(next);
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [hasFinePointer, prefersReducedMotion, seekToProgress]);
+
+  // En táctil el hero se scrubbea con su propio scroll; también alimenta el
+  // fundido de salida hacia el primer capítulo.
   const { scrollYProgress } = useScroll({
     target: heroRef,
     offset: ["start start", "end start"],
@@ -39,6 +65,10 @@ export default function HeroStage({
   useMotionValueEvent(scrollYProgress, "change", (p) => {
     if (!hasFinePointer && !prefersReducedMotion) seekToProgress(p);
   });
+
+  // Fundido de salida del banner: al hacer scroll hacia el primer capítulo la
+  // escena se oscurece progresivamente mientras el vídeo de secuencia aparece.
+  const exitOverlayOpacity = useTransform(scrollYProgress, [0.2, 0.9], [0, 1]);
 
   useEffect(() => {
     if (prefersReducedMotion && videoDuration) {
@@ -54,7 +84,7 @@ export default function HeroStage({
     const percentage = (e.clientX - rect.left) / rect.width;
     // La zona cómoda [0.1, 0.9] del ancho se mapea a [0, 1] del vídeo.
     const progress = (percentage - 0.1) / 0.8;
-    seekToProgress(progress);
+    targetProgressRef.current = Math.max(0, Math.min(1, progress));
   };
 
   return (
@@ -101,31 +131,38 @@ export default function HeroStage({
         <div className="absolute inset-0 bg-gradient-to-t from-abyss via-transparent to-abyss opacity-90" />
       </div>
 
-      {/* z-5 · título gigante, por debajo del vídeo */}
-      <div className="absolute inset-x-0 top-[18%] md:top-[15%] lg:top-[12%] z-[5] select-none pointer-events-none">
-        <CumbreTitle />
+      {/* z-5 · título, por debajo del vídeo para que la figura lo recorra */}
+      <div className="absolute inset-x-0 top-[16%] md:top-[14%] z-[5] select-none pointer-events-none">
+        <HeroTitle />
       </div>
 
-      {/* z-10 · vídeo scrubbeado por ratón */}
+      {/* z-10 · vídeo scrubbeado por ratón, figura desplazada a la derecha */}
       <video
         ref={videoRef}
         muted
         playsInline
         preload="auto"
         aria-hidden="true"
-        className="absolute inset-0 w-full h-full object-cover opacity-95 mix-blend-screen pointer-events-none z-10"
+        className="absolute inset-0 w-full h-full object-cover opacity-95 mix-blend-screen pointer-events-none z-10 lg:translate-x-[14%] lg:scale-110"
         {...videoHandlers}
       >
         <source src={VIDEO_PRINCIPAL_URL} type="video/mp4" />
       </video>
 
-      {/* z-20 · contenido */}
+      {/* z-20 · contenido inferior */}
       <div className="relative z-20 mt-auto w-full">
-        <div className="max-w-7xl mx-auto px-6 md:px-12 lg:pr-20 grid grid-cols-1 lg:grid-cols-12 gap-8 pb-4 md:pb-6 items-end">
+        <div className="max-w-7xl mx-auto px-6 md:px-12 lg:pr-20 grid grid-cols-1 lg:grid-cols-12 gap-8 pb-8 md:pb-10 items-end">
           <LeftInfoBlock />
           <RightInfoBlock />
         </div>
       </div>
+
+      {/* z-30 · fundido de salida hacia el primer capítulo */}
+      <motion.div
+        aria-hidden="true"
+        style={{ opacity: exitOverlayOpacity }}
+        className="absolute inset-0 z-30 bg-abyss pointer-events-none"
+      />
     </section>
   );
 }

@@ -1,6 +1,6 @@
 import { motion, useReducedMotion, useTransform, type MotionValue } from "motion/react";
 import { ArrowUpRight } from "lucide-react";
-import { AVATARS, type Chapter } from "../config/chapters";
+import { AVATARS, type Chapter } from "../../wj-content/wj-capitulos";
 
 interface ChapterOverlayProps {
   chapter: Chapter;
@@ -101,7 +101,8 @@ export default function ChapterOverlay({
                 ))}
               </div>
               <p className="font-mono text-xs text-white/40">
-                <span className="text-amber">500+</span> asistentes esperados
+                <span className="text-amber">{chapter.avataresCifra}</span>{" "}
+                {chapter.avataresNota}
               </p>
             </div>
           )}
@@ -115,7 +116,7 @@ export default function ChapterOverlay({
                          transition-colors hover:bg-crimson hover:text-white
                          focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sky"
             >
-              Quiero inscribirme
+              {chapter.ctaTexto}
               <ArrowUpRight className="size-5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </a>
           )}

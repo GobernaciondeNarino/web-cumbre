@@ -1,4 +1,4 @@
-import { CHAPTERS } from "../config/chapters";
+import { CHAPTERS } from "../../wj-content/wj-capitulos";
 
 interface ScrollProgressRailProps {
   activeSection: number;

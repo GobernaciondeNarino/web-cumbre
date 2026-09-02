@@ -11,7 +11,7 @@ import ScrollProgressRail from "./components/ScrollProgressRail";
 import ProjectModal from "./components/ProjectModal";
 import ChatDrawer from "./components/ChatDrawer";
 import { useAudioClick } from "./hooks/useAudioClick";
-import { CHAPTERS } from "./config/chapters";
+import { CHAPTERS } from "../wj-content/wj-capitulos";
 
 export default function App() {
   return <Page />;

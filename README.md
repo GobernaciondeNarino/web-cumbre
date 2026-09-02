@@ -5,29 +5,46 @@ Dos escenarios `sticky` de vídeo cuyo tiempo de reproducción está atado al cu
 scroll, cinco capítulos superpuestos, widgets flotantes persistentes y sección final de
 inscripción.
 
+> **¿Quieres cambiar textos, enlaces o vídeos?** Todo lo editable está en
+> `wj-content/` y la guía completa de administración en **[`wj-admin/GUIA.md`](wj-admin/GUIA.md)**.
+
+## Estructura
+
+```
+wj-admin/      Guía de administración (dónde se cambia cada cosa).
+wj-content/    Contenido editable: wj-textos.ts, wj-capitulos.ts, wj-enlaces.ts
+               y uploads/ (vídeos, favicon).
+wj-includes/   Código de la aplicación: componentes React, hooks y estilos.
+dist/          Sitio compilado y versionado — es lo que se sirve en Plesk.
+index.html     Punto de entrada (Vite y Apache exigen este nombre exacto).
+wj-vite.config.ts  Configuración de Vite (base relativa + publicDir en uploads).
+.htaccess      Reescribe todas las peticiones hacia dist/ bajo Apache/Plesk.
+```
+
+`package.json`, `tsconfig.json` e `index.html` conservan sus nombres porque npm,
+TypeScript, Vite y Apache los buscan exactamente así.
+
 ## Stack
 
 React 19 · TypeScript · Vite 6 · Tailwind CSS v4 (`@tailwindcss/vite`) · `motion`
 (Framer Motion v12, importado desde `motion/react`) · `lucide-react`. Sin librerías de
-smooth-scroll: todo el scrub se resuelve con `useScroll`, `useSpring`, `useTransform`
-y `useMotionValueEvent`.
+smooth-scroll: el scrub se resuelve con `useScroll`, `useSpring`, `useTransform`,
+`useMotionValueEvent` y un bucle `requestAnimationFrame` con easing para el banner.
 
 ## Desarrollo
 
 ```bash
 npm install
 npm run dev       # servidor de desarrollo
-npm run build     # typecheck + build de producción
+npm run build     # typecheck + build de producción (regenera dist/)
 npm run preview   # sirve dist/
 ```
 
 ## Despliegue en Plesk
 
-Este es un proyecto Vite: **nunca sirvas la raíz del repositorio**. El `index.html` de la
-raíz referencia `/src/main.tsx`, que solo existe en el servidor de desarrollo — servirlo
-directo produce los 404 de `main.tsx`. Lo que se publica es la carpeta **`dist/`**, que
-está compilada y versionada en este repositorio con rutas relativas (funciona en
-`httpdocs` o en cualquier subcarpeta).
+Este es un proyecto Vite: **nunca sirvas el código fuente**. Lo que se publica es la
+carpeta **`dist/`**, compilada y versionada en este repositorio con rutas relativas
+(funciona en `httpdocs` o en cualquier subcarpeta).
 
 Opción A — Desplegar el repo completo (la más simple):
 
@@ -50,25 +67,12 @@ Opción C — Subida manual solo del build:
 
 Notas:
 
-- No hay rutas de SPA: es una sola página, no se necesitan reglas de rewrite en
-  `.htaccess` ni en nginx.
-- Los MP4 ya llevan `faststart`; Apache/nginx de Plesk sirven `Range` por defecto,
-  que es lo único que el scrub de vídeo necesita.
-- Si cambias código, vuelve a ejecutar `npm run build` y confirma el nuevo `dist/`
-  antes de desplegar.
-
-## Dónde cambiar los assets
-
-Todo vive en `src/config/assets.ts`:
-
-- `VIDEO_PRINCIPAL_URL` — vídeo del hero (scrub por ratón). Hoy: `/videos/cumbre-principal.mp4`.
-- `VIDEO_SECUENCIA_URL` — vídeo de la secuencia de capítulos (scrub por scroll). Hoy: `/videos/cumbre-secuencia.mp4`.
-- `FORM_URL` — URL del formulario externo de inscripción. **Está vacía**: el CTA se
-  muestra deshabilitado hasta que pegues aquí la URL real (Google Forms, etc.).
-
-Ambos vídeos fueron generados con [Higgsfield](https://higgsfield.ai) y están servidos
-desde `public/videos/` como MP4 H.264 con `faststart`, sin audio. El texto de los
-capítulos se edita en `src/config/chapters.ts`.
+- No hay rutas de SPA: es una sola página, no se necesitan reglas de rewrite
+  adicionales.
+- Los MP4 llevan `faststart`; Apache/nginx de Plesk sirven `Range` por defecto, que es
+  lo único que el scrub de vídeo necesita.
+- Tras cambiar código o contenido, ejecuta `npm run build` y confirma el nuevo `dist/`
+  antes de desplegar. Si el cambio no se ve en producción, purga la caché de Cloudflare.
 
 ## Integraciones incluidas
 
