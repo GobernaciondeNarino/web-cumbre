@@ -82,6 +82,12 @@ medios:
   clase `cumbre-capitulo`. Se coloca antes de esas secciones; funciona con
   cualquier número de ellas, repartiendo el vídeo en partes iguales.
 
+Al reutilizarlos, **renombra el prefijo de sus clases** (`cumbre-banner` →
+`festival-banner`, etc.). Dos secciones distintas generadas con esta skill
+pueden acabar en la misma página, y si comparten prefijo el CSS de una pisa a
+la otra. Es un renombrado mecánico de todo el bloque; hazlo también en el `<style>`
+y en el `<script>`, que se buscan por esas mismas clases.
+
 Ambos comparten la disciplina que hace que el scrub se vea fluido:
 
 **Cola de un solo seek.** Un `<video>` no puede atender un salto por cada

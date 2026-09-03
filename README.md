@@ -58,10 +58,17 @@ python3 .claude/skills/elementor-maqueta/scripts/validar.py plantilla.json --arb
 
 ## Historial
 
-Este repositorio alojó antes la landing de la Cumbre IA Nariño, de donde salió
-todo lo que la skill sabe sobre Elementor. Ese código sigue disponible en la
-etiqueta [`landing-cumbre-v1`](../../tree/landing-cumbre-v1):
+Este repositorio alojó antes la landing de la Cumbre IA Nariño (React + Vite,
+vídeos y las primeras plantillas de Elementor), de donde salió todo lo que la
+skill sabe sobre el formato. Ese código sigue íntegro en el historial, en el
+commit `861dc74`:
 
 ```bash
-git checkout landing-cumbre-v1
+git show --stat 861dc74          # ver qué contenía
+git checkout 861dc74             # explorarlo
+git checkout 861dc74 -- .        # recuperarlo al directorio de trabajo
 ```
+
+La landing publicada en `tic.narino.gov.co/cumbre/` se sirve desde la carpeta
+`dist/` de ese commit: si necesitas volver a desplegarla, recupérala así antes
+de hacer *pull* en Plesk.
