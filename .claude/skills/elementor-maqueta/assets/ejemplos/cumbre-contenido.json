@@ -1,0 +1,819 @@
+{
+ "content": [
+  {
+   "id": "0a26ca3d",
+   "elType": "container",
+   "isInner": false,
+   "settings": {
+    "content_width": "full",
+    "background_background": "classic",
+    "background_color": "#00133D"
+   },
+   "elements": [
+    {
+     "id": "9fec8f32",
+     "elType": "widget",
+     "isInner": false,
+     "settings": {
+      "html": "<!-- ============================================================================\n  CUMBRE IA NARIÑO · CONTENIDO — vídeo scrubbeado con el scroll, para Elementor.\n\n  CÓMO USARLO:\n  1. En Elementor agrega un widget \"HTML\" y pega TODO este archivo. Colócalo\n     JUSTO ANTES de tus secciones de capítulos.\n  2. Crea tus capítulos como contenedores normales de Elementor (título,\n     texto, botones… lo que quieras) y a CADA UNO asígnale la clase CSS\n     \"cumbre-capitulo\" (Avanzado → Clases CSS). Puedes crear los que quieras,\n     en el orden que quieras: el vídeo se reparte en partes iguales entre ellos.\n  3. Deja los capítulos con fondo transparente para que el vídeo se vea detrás.\n  4. Cambia la URL del vídeo en data-video (MP4 directo H.264 sin audio; puede\n     venir de tu Biblioteca de medios).\n\n  El efecto: mientras el visitante recorre los capítulos, el vídeo queda fijo\n  a pantalla completa detrás del contenido y avanza/retrocede al ritmo del\n  scroll, con suavizado. Antes del primer capítulo y después del último, el\n  vídeo desaparece en fundido y no interfiere con el resto de la página.\n\n  Si NO agregas ninguna sección con clase \"cumbre-capitulo\", el widget crea\n  su propio recorrido de data-secciones × 100vh como demostración.\n============================================================================ -->\n<div class=\"cumbre-secuencia\"\n     data-video=\"/cumbre/videos/cumbre-secuencia.mp4\"\n     data-duracion-reserva=\"20\"\n     data-secciones=\"5\">\n  <div class=\"cumbre-secuencia__nucleo\"></div>\n  <video class=\"cumbre-secuencia__video\" muted playsinline preload=\"auto\" aria-hidden=\"true\"></video>\n  <div class=\"cumbre-secuencia__vineta\"></div>\n</div>\n\n<style>\n  .cumbre-secuencia{position:fixed;inset:0;z-index:1;opacity:0;pointer-events:none;\n    visibility:hidden;transition:visibility 0s linear .2s;}\n  .cumbre-secuencia.cumbre-secuencia--activa{visibility:visible;transition:none;}\n  .cumbre-secuencia__nucleo{position:absolute;inset:0;\n    background:radial-gradient(ellipse at center,#000a22 0%,#00133d 65%);}\n  .cumbre-secuencia__video{position:absolute;inset:0;width:100%;height:100%;\n    object-fit:cover;opacity:.95;mix-blend-mode:screen;}\n  .cumbre-secuencia__vineta{position:absolute;inset:0;\n    background:linear-gradient(to right,rgba(0,19,61,.85) 0%,transparent 35%,transparent 65%,rgba(0,19,61,.85) 100%);}\n  /* Los capítulos del usuario quedan por encima del vídeo fijo. */\n  .cumbre-capitulo{position:relative;z-index:2;min-height:100vh;}\n  .cumbre-secuencia__espaciador{height:0;}\n</style>\n\n<script>\n(function () {\n  \"use strict\";\n  var raiz = document.querySelector(\".cumbre-secuencia:not([data-listo])\");\n  if (!raiz) return;\n  raiz.setAttribute(\"data-listo\", \"1\");\n\n  var video = raiz.querySelector(\".cumbre-secuencia__video\");\n  var reserva = parseFloat(raiz.getAttribute(\"data-duracion-reserva\")) || 20;\n  var seccionesDemo = parseInt(raiz.getAttribute(\"data-secciones\"), 10) || 5;\n  video.src = raiz.getAttribute(\"data-video\");\n\n  var anfitrion = raiz.closest(\".elementor-widget\") || raiz;\n  var duracion = 0;\n  var objetivo = 0;\n  var actual = 0;\n  var seekPendiente = null;\n  var espaciador = null;\n  var movimientoReducido = window.matchMedia(\"(prefers-reduced-motion: reduce)\").matches;\n\n  function capturarDuracion() {\n    if (isFinite(video.duration) && video.duration > 0) duracion = video.duration;\n  }\n  video.addEventListener(\"loadedmetadata\", function () {\n    capturarDuracion();\n    video.pause();\n    video.currentTime = 0;\n  });\n  video.addEventListener(\"durationchange\", capturarDuracion);\n  video.addEventListener(\"canplay\", capturarDuracion);\n  video.addEventListener(\"seeked\", function () {\n    if (seekPendiente !== null) {\n      var t = seekPendiente;\n      seekPendiente = null;\n      video.currentTime = t;\n    }\n  });\n\n  function irAProgreso(progreso) {\n    var d = duracion || video.duration;\n    if (!d || !isFinite(d)) d = reserva;\n    var limitado = Math.max(0, Math.min(1, progreso));\n    var destino = limitado * Math.max(0, d - 0.05);\n    if (video.seeking) seekPendiente = destino;\n    else video.currentTime = destino;\n  }\n\n  function capitulos() {\n    return Array.prototype.slice.call(document.querySelectorAll(\".cumbre-capitulo\"));\n  }\n\n  // Sin capítulos del usuario, se crea un recorrido de demostración.\n  // Solo se decide con el DOM completo: este script corre antes de que las\n  // secciones que vienen después del widget existan.\n  var domListo = document.readyState !== \"loading\";\n  document.addEventListener(\"DOMContentLoaded\", function () {\n    domListo = true;\n    alDesplazar();\n  });\n  window.addEventListener(\"load\", function () { alDesplazar(); });\n\n  function asegurarRecorrido() {\n    if (capitulos().length > 0) {\n      if (espaciador) { espaciador.remove(); espaciador = null; }\n      return;\n    }\n    if (!domListo) return;\n    if (!espaciador) {\n      espaciador = document.createElement(\"div\");\n      espaciador.className = \"cumbre-secuencia__espaciador\";\n      anfitrion.parentNode.insertBefore(espaciador, anfitrion.nextSibling);\n    }\n    espaciador.style.height = seccionesDemo * 100 + \"vh\";\n  }\n\n  function rango() {\n    var caps = capitulos();\n    if (caps.length > 0) {\n      var inicio = Infinity;\n      var fin = -Infinity;\n      caps.forEach(function (c) {\n        var caja = c.getBoundingClientRect();\n        inicio = Math.min(inicio, caja.top + window.scrollY);\n        fin = Math.max(fin, caja.bottom + window.scrollY);\n      });\n      return { inicio: inicio, fin: fin };\n    }\n    var base = anfitrion.getBoundingClientRect().top + window.scrollY;\n    return { inicio: base, fin: base + seccionesDemo * window.innerHeight };\n  }\n\n  function alDesplazar() {\n    asegurarRecorrido();\n    var r = rango();\n    var alto = window.innerHeight;\n    var recorrido = Math.max(1, r.fin - r.inicio - alto);\n    var progreso = (window.scrollY - r.inicio) / recorrido;\n    objetivo = progreso;\n\n    // El vídeo solo es visible dentro del recorrido, con fundido en los bordes.\n    var dentro = progreso > -0.15 && progreso < 1.15;\n    raiz.classList.toggle(\"cumbre-secuencia--activa\", dentro);\n    var entrada = Math.max(0, Math.min(1, (progreso + 0.1) / 0.15));\n    var salida = Math.max(0, Math.min(1, (1.1 - progreso) / 0.15));\n    raiz.style.opacity = String(Math.min(entrada, salida));\n  }\n  window.addEventListener(\"scroll\", alDesplazar, { passive: true });\n  window.addEventListener(\"resize\", alDesplazar);\n\n  if (movimientoReducido) {\n    // Sin animación: un frame representativo según el capítulo visible.\n    window.addEventListener(\"scroll\", function () {\n      var n = capitulos().length || seccionesDemo;\n      var i = Math.max(0, Math.min(n - 1, Math.floor(objetivo * n)));\n      irAProgreso((i + 0.5) / n);\n    }, { passive: true });\n  } else {\n    // Suavizado tipo muelle: el scroll fija el objetivo y el bucle rAF\n    // interpola hacia él, drenando como mucho un seek por frame.\n    (function animar() {\n      var siguiente = actual + (objetivo - actual) * 0.11;\n      if (Math.abs(siguiente - actual) > 0.0004) {\n        actual = siguiente;\n        irAProgreso(siguiente);\n      }\n      requestAnimationFrame(animar);\n    })();\n  }\n  alDesplazar();\n})();\n</script>\n"
+     },
+     "elements": [],
+     "widgetType": "html"
+    }
+   ]
+  },
+  {
+   "id": "979d60db",
+   "elType": "container",
+   "isInner": false,
+   "settings": {
+    "content_width": "full",
+    "min_height": {
+     "unit": "vh",
+     "size": 100,
+     "sizes": []
+    },
+    "flex_direction": "column",
+    "flex_justify_content": "center",
+    "flex_align_items": "flex-start",
+    "padding": {
+     "unit": "px",
+     "top": "48",
+     "right": "48",
+     "bottom": "48",
+     "left": "48",
+     "isLinked": false
+    },
+    "css_classes": "cumbre-capitulo"
+   },
+   "elements": [
+    {
+     "id": "6d47fbb1",
+     "elType": "container",
+     "isInner": true,
+     "settings": {
+      "content_width": "full",
+      "flex_direction": "column",
+      "width": {
+       "unit": "px",
+       "size": 560,
+       "sizes": []
+      },
+      "padding": {
+       "unit": "px",
+       "top": "24",
+       "right": "24",
+       "bottom": "24",
+       "left": "24",
+       "isLinked": true
+      }
+     },
+     "elements": [
+      {
+       "id": "e3b96a31",
+       "elType": "widget",
+       "isInner": false,
+       "settings": {
+        "title": "01",
+        "header_size": "h6",
+        "title_color": "#FF6300",
+        "typography_typography": "custom",
+        "typography_font_family": "JetBrains Mono",
+        "typography_font_weight": "500",
+        "typography_font_size": {
+         "unit": "px",
+         "size": 12,
+         "sizes": []
+        },
+        "typography_letter_spacing": {
+         "unit": "px",
+         "size": 4,
+         "sizes": []
+        },
+        "typography_text_transform": "uppercase"
+       },
+       "elements": [],
+       "widgetType": "heading"
+      },
+      {
+       "id": "c6b3e61d",
+       "elType": "widget",
+       "isInner": false,
+       "settings": {
+        "title": "Qué es la Cumbre",
+        "header_size": "h6",
+        "title_color": "rgba(255,255,255,0.4)",
+        "typography_typography": "custom",
+        "typography_font_family": "JetBrains Mono",
+        "typography_font_weight": "500",
+        "typography_font_size": {
+         "unit": "px",
+         "size": 12,
+         "sizes": []
+        },
+        "typography_letter_spacing": {
+         "unit": "px",
+         "size": 4,
+         "sizes": []
+        },
+        "typography_text_transform": "uppercase"
+       },
+       "elements": [],
+       "widgetType": "heading"
+      },
+      {
+       "id": "986c10d1",
+       "elType": "widget",
+       "isInner": false,
+       "settings": {
+        "title": "Manifiesto",
+        "header_size": "h2",
+        "title_color": "#FFFFFF",
+        "typography_typography": "custom",
+        "typography_font_family": "Outfit",
+        "typography_font_weight": "900",
+        "typography_line_height": {
+         "unit": "em",
+         "size": 0.9,
+         "sizes": []
+        },
+        "typography_font_size": {
+         "unit": "px",
+         "size": 72,
+         "sizes": []
+        }
+       },
+       "elements": [],
+       "widgetType": "heading"
+      },
+      {
+       "id": "d707b2c4",
+       "elType": "widget",
+       "isInner": false,
+       "settings": {
+        "editor": "<p>La Cumbre IA Nariño reúne en Pasto a quienes están construyendo el futuro de la inteligencia artificial desde el suroccidente colombiano: gobierno, academia, empresa y comunidad en un mismo escenario.</p>",
+        "text_color": "rgba(255,255,255,0.6)",
+        "typography_typography": "custom",
+        "typography_font_family": "Inter",
+        "typography_font_size": {
+         "unit": "px",
+         "size": 17,
+         "sizes": []
+        },
+        "typography_line_height": {
+         "unit": "em",
+         "size": 1.6,
+         "sizes": []
+        }
+       },
+       "elements": [],
+       "widgetType": "text-editor"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "3bbae827",
+   "elType": "container",
+   "isInner": false,
+   "settings": {
+    "content_width": "full",
+    "min_height": {
+     "unit": "vh",
+     "size": 100,
+     "sizes": []
+    },
+    "flex_direction": "column",
+    "flex_justify_content": "center",
+    "flex_align_items": "flex-end",
+    "padding": {
+     "unit": "px",
+     "top": "48",
+     "right": "48",
+     "bottom": "48",
+     "left": "48",
+     "isLinked": false
+    },
+    "css_classes": "cumbre-capitulo"
+   },
+   "elements": [
+    {
+     "id": "43f0ae58",
+     "elType": "container",
+     "isInner": true,
+     "settings": {
+      "content_width": "full",
+      "flex_direction": "column",
+      "width": {
+       "unit": "px",
+       "size": 560,
+       "sizes": []
+      },
+      "padding": {
+       "unit": "px",
+       "top": "24",
+       "right": "24",
+       "bottom": "24",
+       "left": "24",
+       "isLinked": true
+      }
+     },
+     "elements": [
+      {
+       "id": "c0f3ee87",
+       "elType": "widget",
+       "isInner": false,
+       "settings": {
+        "title": "02",
+        "header_size": "h6",
+        "title_color": "#FF6300",
+        "typography_typography": "custom",
+        "typography_font_family": "JetBrains Mono",
+        "typography_font_weight": "500",
+        "typography_font_size": {
+         "unit": "px",
+         "size": 12,
+         "sizes": []
+        },
+        "typography_letter_spacing": {
+         "unit": "px",
+         "size": 4,
+         "sizes": []
+        },
+        "typography_text_transform": "uppercase"
+       },
+       "elements": [],
+       "widgetType": "heading"
+      },
+      {
+       "id": "e5d6b41e",
+       "elType": "widget",
+       "isInner": false,
+       "settings": {
+        "title": "De qué hablaremos",
+        "header_size": "h6",
+        "title_color": "rgba(255,255,255,0.4)",
+        "typography_typography": "custom",
+        "typography_font_family": "JetBrains Mono",
+        "typography_font_weight": "500",
+        "typography_font_size": {
+         "unit": "px",
+         "size": 12,
+         "sizes": []
+        },
+        "typography_letter_spacing": {
+         "unit": "px",
+         "size": 4,
+         "sizes": []
+        },
+        "typography_text_transform": "uppercase"
+       },
+       "elements": [],
+       "widgetType": "heading"
+      },
+      {
+       "id": "516f6863",
+       "elType": "widget",
+       "isInner": false,
+       "settings": {
+        "title": "Ejes",
+        "header_size": "h2",
+        "title_color": "#FFFFFF",
+        "typography_typography": "custom",
+        "typography_font_family": "Outfit",
+        "typography_font_weight": "900",
+        "typography_line_height": {
+         "unit": "em",
+         "size": 0.9,
+         "sizes": []
+        },
+        "typography_font_size": {
+         "unit": "px",
+         "size": 72,
+         "sizes": []
+        }
+       },
+       "elements": [],
+       "widgetType": "heading"
+      },
+      {
+       "id": "dd7ddafd",
+       "elType": "widget",
+       "isInner": false,
+       "settings": {
+        "editor": "<p>IA para el sector público, talento digital territorial, emprendimiento con datos y ética de los sistemas inteligentes. Cuatro ejes, una conversación: cómo la IA transforma la vida en el territorio.</p>",
+        "text_color": "rgba(255,255,255,0.6)",
+        "typography_typography": "custom",
+        "typography_font_family": "Inter",
+        "typography_font_size": {
+         "unit": "px",
+         "size": 17,
+         "sizes": []
+        },
+        "typography_line_height": {
+         "unit": "em",
+         "size": 1.6,
+         "sizes": []
+        }
+       },
+       "elements": [],
+       "widgetType": "text-editor"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "f8c00d1f",
+   "elType": "container",
+   "isInner": false,
+   "settings": {
+    "content_width": "full",
+    "min_height": {
+     "unit": "vh",
+     "size": 100,
+     "sizes": []
+    },
+    "flex_direction": "column",
+    "flex_justify_content": "center",
+    "flex_align_items": "flex-start",
+    "padding": {
+     "unit": "px",
+     "top": "48",
+     "right": "48",
+     "bottom": "48",
+     "left": "48",
+     "isLinked": false
+    },
+    "css_classes": "cumbre-capitulo"
+   },
+   "elements": [
+    {
+     "id": "ffe8453b",
+     "elType": "container",
+     "isInner": true,
+     "settings": {
+      "content_width": "full",
+      "flex_direction": "column",
+      "width": {
+       "unit": "px",
+       "size": 560,
+       "sizes": []
+      },
+      "padding": {
+       "unit": "px",
+       "top": "24",
+       "right": "24",
+       "bottom": "24",
+       "left": "24",
+       "isLinked": true
+      }
+     },
+     "elements": [
+      {
+       "id": "77e0181f",
+       "elType": "widget",
+       "isInner": false,
+       "settings": {
+        "title": "03",
+        "header_size": "h6",
+        "title_color": "#FF6300",
+        "typography_typography": "custom",
+        "typography_font_family": "JetBrains Mono",
+        "typography_font_weight": "500",
+        "typography_font_size": {
+         "unit": "px",
+         "size": 12,
+         "sizes": []
+        },
+        "typography_letter_spacing": {
+         "unit": "px",
+         "size": 4,
+         "sizes": []
+        },
+        "typography_text_transform": "uppercase"
+       },
+       "elements": [],
+       "widgetType": "heading"
+      },
+      {
+       "id": "4e6d698f",
+       "elType": "widget",
+       "isInner": false,
+       "settings": {
+        "title": "Qué vivirás",
+        "header_size": "h6",
+        "title_color": "rgba(255,255,255,0.4)",
+        "typography_typography": "custom",
+        "typography_font_family": "JetBrains Mono",
+        "typography_font_weight": "500",
+        "typography_font_size": {
+         "unit": "px",
+         "size": 12,
+         "sizes": []
+        },
+        "typography_letter_spacing": {
+         "unit": "px",
+         "size": 4,
+         "sizes": []
+        },
+        "typography_text_transform": "uppercase"
+       },
+       "elements": [],
+       "widgetType": "heading"
+      },
+      {
+       "id": "32d82e8d",
+       "elType": "widget",
+       "isInner": false,
+       "settings": {
+        "title": "Experiencias",
+        "header_size": "h2",
+        "title_color": "#FFFFFF",
+        "typography_typography": "custom",
+        "typography_font_family": "Outfit",
+        "typography_font_weight": "900",
+        "typography_line_height": {
+         "unit": "em",
+         "size": 0.9,
+         "sizes": []
+        },
+        "typography_font_size": {
+         "unit": "px",
+         "size": 72,
+         "sizes": []
+        }
+       },
+       "elements": [],
+       "widgetType": "heading"
+      },
+      {
+       "id": "cad9868c",
+       "elType": "widget",
+       "isInner": false,
+       "settings": {
+        "editor": "<p>Dos días de programación continua diseñada para pasar de la inspiración a la práctica: conferencias centrales, talleres de IA aplicada y una muestra interactiva de proyectos del ecosistema nariñense.</p>",
+        "text_color": "rgba(255,255,255,0.6)",
+        "typography_typography": "custom",
+        "typography_font_family": "Inter",
+        "typography_font_size": {
+         "unit": "px",
+         "size": 17,
+         "sizes": []
+        },
+        "typography_line_height": {
+         "unit": "em",
+         "size": 1.6,
+         "sizes": []
+        }
+       },
+       "elements": [],
+       "widgetType": "text-editor"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "db68385f",
+   "elType": "container",
+   "isInner": false,
+   "settings": {
+    "content_width": "full",
+    "min_height": {
+     "unit": "vh",
+     "size": 100,
+     "sizes": []
+    },
+    "flex_direction": "column",
+    "flex_justify_content": "center",
+    "flex_align_items": "flex-end",
+    "padding": {
+     "unit": "px",
+     "top": "48",
+     "right": "48",
+     "bottom": "48",
+     "left": "48",
+     "isLinked": false
+    },
+    "css_classes": "cumbre-capitulo"
+   },
+   "elements": [
+    {
+     "id": "3f71183a",
+     "elType": "container",
+     "isInner": true,
+     "settings": {
+      "content_width": "full",
+      "flex_direction": "column",
+      "width": {
+       "unit": "px",
+       "size": 560,
+       "sizes": []
+      },
+      "padding": {
+       "unit": "px",
+       "top": "24",
+       "right": "24",
+       "bottom": "24",
+       "left": "24",
+       "isLinked": true
+      }
+     },
+     "elements": [
+      {
+       "id": "4fe11603",
+       "elType": "widget",
+       "isInner": false,
+       "settings": {
+        "title": "04",
+        "header_size": "h6",
+        "title_color": "#FF6300",
+        "typography_typography": "custom",
+        "typography_font_family": "JetBrains Mono",
+        "typography_font_weight": "500",
+        "typography_font_size": {
+         "unit": "px",
+         "size": 12,
+         "sizes": []
+        },
+        "typography_letter_spacing": {
+         "unit": "px",
+         "size": 4,
+         "sizes": []
+        },
+        "typography_text_transform": "uppercase"
+       },
+       "elements": [],
+       "widgetType": "heading"
+      },
+      {
+       "id": "172954f7",
+       "elType": "widget",
+       "isInner": false,
+       "settings": {
+        "title": "Quiénes estaremos",
+        "header_size": "h6",
+        "title_color": "rgba(255,255,255,0.4)",
+        "typography_typography": "custom",
+        "typography_font_family": "JetBrains Mono",
+        "typography_font_weight": "500",
+        "typography_font_size": {
+         "unit": "px",
+         "size": 12,
+         "sizes": []
+        },
+        "typography_letter_spacing": {
+         "unit": "px",
+         "size": 4,
+         "sizes": []
+        },
+        "typography_text_transform": "uppercase"
+       },
+       "elements": [],
+       "widgetType": "heading"
+      },
+      {
+       "id": "5dd1dc2c",
+       "elType": "widget",
+       "isInner": false,
+       "settings": {
+        "title": "Comunidad",
+        "header_size": "h2",
+        "title_color": "#FFFFFF",
+        "typography_typography": "custom",
+        "typography_font_family": "Outfit",
+        "typography_font_weight": "900",
+        "typography_line_height": {
+         "unit": "em",
+         "size": 0.9,
+         "sizes": []
+        },
+        "typography_font_size": {
+         "unit": "px",
+         "size": 72,
+         "sizes": []
+        }
+       },
+       "elements": [],
+       "widgetType": "heading"
+      },
+      {
+       "id": "e196e670",
+       "elType": "widget",
+       "isInner": false,
+       "settings": {
+        "editor": "<p>Estudiantes, servidores públicos, emprendedores y curiosos de toda la región. La Cumbre es el punto de encuentro del ecosistema de innovación de Nariño.</p>",
+        "text_color": "rgba(255,255,255,0.6)",
+        "typography_typography": "custom",
+        "typography_font_family": "Inter",
+        "typography_font_size": {
+         "unit": "px",
+         "size": 17,
+         "sizes": []
+        },
+        "typography_line_height": {
+         "unit": "em",
+         "size": 1.6,
+         "sizes": []
+        }
+       },
+       "elements": [],
+       "widgetType": "text-editor"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "142a8606",
+   "elType": "container",
+   "isInner": false,
+   "settings": {
+    "content_width": "full",
+    "min_height": {
+     "unit": "vh",
+     "size": 100,
+     "sizes": []
+    },
+    "flex_direction": "column",
+    "flex_justify_content": "center",
+    "flex_align_items": "flex-start",
+    "padding": {
+     "unit": "px",
+     "top": "48",
+     "right": "48",
+     "bottom": "48",
+     "left": "48",
+     "isLinked": false
+    },
+    "css_classes": "cumbre-capitulo"
+   },
+   "elements": [
+    {
+     "id": "8f54767a",
+     "elType": "container",
+     "isInner": true,
+     "settings": {
+      "content_width": "full",
+      "flex_direction": "column",
+      "width": {
+       "unit": "px",
+       "size": 560,
+       "sizes": []
+      },
+      "padding": {
+       "unit": "px",
+       "top": "24",
+       "right": "24",
+       "bottom": "24",
+       "left": "24",
+       "isLinked": true
+      }
+     },
+     "elements": [
+      {
+       "id": "fd787cbe",
+       "elType": "widget",
+       "isInner": false,
+       "settings": {
+        "title": "05",
+        "header_size": "h6",
+        "title_color": "#FF6300",
+        "typography_typography": "custom",
+        "typography_font_family": "JetBrains Mono",
+        "typography_font_weight": "500",
+        "typography_font_size": {
+         "unit": "px",
+         "size": 12,
+         "sizes": []
+        },
+        "typography_letter_spacing": {
+         "unit": "px",
+         "size": 4,
+         "sizes": []
+        },
+        "typography_text_transform": "uppercase"
+       },
+       "elements": [],
+       "widgetType": "heading"
+      },
+      {
+       "id": "f163b6f5",
+       "elType": "widget",
+       "isInner": false,
+       "settings": {
+        "title": "Por qué inscribirte",
+        "header_size": "h6",
+        "title_color": "rgba(255,255,255,0.4)",
+        "typography_typography": "custom",
+        "typography_font_family": "JetBrains Mono",
+        "typography_font_weight": "500",
+        "typography_font_size": {
+         "unit": "px",
+         "size": 12,
+         "sizes": []
+        },
+        "typography_letter_spacing": {
+         "unit": "px",
+         "size": 4,
+         "sizes": []
+        },
+        "typography_text_transform": "uppercase"
+       },
+       "elements": [],
+       "widgetType": "heading"
+      },
+      {
+       "id": "0424df1f",
+       "elType": "widget",
+       "isInner": false,
+       "settings": {
+        "title": "El programa",
+        "header_size": "h2",
+        "title_color": "#FFFFFF",
+        "typography_typography": "custom",
+        "typography_font_family": "Outfit",
+        "typography_font_weight": "900",
+        "typography_line_height": {
+         "unit": "em",
+         "size": 0.9,
+         "sizes": []
+        },
+        "typography_font_size": {
+         "unit": "px",
+         "size": 72,
+         "sizes": []
+        }
+       },
+       "elements": [],
+       "widgetType": "heading"
+      },
+      {
+       "id": "9f56e46d",
+       "elType": "widget",
+       "isInner": false,
+       "settings": {
+        "editor": "<p>La entrada es libre con inscripción previa y los cupos son limitados. Asegura tu lugar y sé parte de la primera gran cita de la inteligencia artificial en Nariño.</p>",
+        "text_color": "rgba(255,255,255,0.6)",
+        "typography_typography": "custom",
+        "typography_font_family": "Inter",
+        "typography_font_size": {
+         "unit": "px",
+         "size": 17,
+         "sizes": []
+        },
+        "typography_line_height": {
+         "unit": "em",
+         "size": 1.6,
+         "sizes": []
+        }
+       },
+       "elements": [],
+       "widgetType": "text-editor"
+      },
+      {
+       "id": "945a6347",
+       "elType": "widget",
+       "isInner": false,
+       "settings": {
+        "text": "Quiero inscribirme",
+        "link": {
+         "url": "#inscripcion",
+         "is_external": "",
+         "nofollow": "",
+         "custom_attributes": ""
+        },
+        "background_color": "#FF6300",
+        "button_text_color": "#00133D",
+        "hover_color": "#FFFFFF",
+        "button_background_hover_color": "#8C0001",
+        "border_radius": {
+         "unit": "px",
+         "top": "999",
+         "right": "999",
+         "bottom": "999",
+         "left": "999",
+         "isLinked": true
+        },
+        "typography_typography": "custom",
+        "typography_font_family": "Outfit",
+        "typography_font_weight": "700"
+       },
+       "elements": [],
+       "widgetType": "button"
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "page_settings": {
+  "background_background": "classic",
+  "background_color": "#00133D"
+ },
+ "version": "0.4",
+ "title": "Cumbre IA — Contenido",
+ "type": "page"
+}
